@@ -1,7 +1,44 @@
 import express from "express";
 import Task from "../models/Task.js"; // Make sure the path is correct
-
+import multer from "multer";
+import path from "path";
 const router = express.Router();
+
+// Configure Multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/"); // Directory to store uploaded files
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); // Unique filename
+  },
+});
+
+const upload = multer({ storage });
+
+// Update a task
+router.put("/:id", upload.array("files", 10), async (req, res) => {
+  //   console.log("put/req.body", req.body);
+  //   console.log("put/req.params.id", req.params.id);
+  //   console.log("put/req.files", req.files);
+
+  try {
+    const filePaths = req.files.map((file) => file.path);
+
+    // console.log("filePaths", filePaths);
+
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.id,
+      { $push: { attachments: { $each: filePaths } } }, // Use $push with $each to add multiple file paths
+      { new: true }
+    );
+
+    // console.log("updatedTask", updatedTask);
+    res.json(updatedTask);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
 
 // Create a new task
 router.post("/", async (req, res) => {
@@ -35,20 +72,6 @@ router.get("/", async (req, res) => {
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-});
-
-// Update a task
-router.put("/:id", async (req, res) => {
-  console.log("put/req.body", req.body);
-
-  try {
-    const updatedTask = await Task.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    res.json(updatedTask);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
   }
 });
 
