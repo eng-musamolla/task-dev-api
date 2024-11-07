@@ -58,6 +58,16 @@ router.get("/", async (req, res) => {
   const { status } = req.query;
   const query = status ? { status } : {};
   try {
+    const customOrder = [
+      "Pending",
+      "In Progress",
+      "Completed",
+      "Incomplete",
+      "Doing",
+      "Overdue",
+      "To Do",
+    ]; // Define your custom order
+
     const tasks = await Task.aggregate([
       { $match: query },
       {
