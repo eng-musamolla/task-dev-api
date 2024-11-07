@@ -5,7 +5,7 @@ const router = express.Router();
 
 // Create a new task
 router.post("/", async (req, res) => {
-  console.log("Post/req.body", req.body);
+  //   console.log("Post/req.body", req.body);
 
   try {
     const newTask = new Task(req.body);
@@ -18,9 +18,20 @@ router.post("/", async (req, res) => {
 
 // Get all tasks
 router.get("/", async (req, res) => {
-  console.log("get/req.body", req.body);
+  const { status } = req.query;
+  const query = status ? { status } : {};
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: "$status",
+          tasks: { $push: "$$ROOT" },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -43,7 +54,7 @@ router.put("/:id", async (req, res) => {
 
 // Delete a task
 router.delete("/:id", async (req, res) => {
-  console.log("delete/req.body", req.body);
+  //   console.log("delete/req.body", req.body);
 
   try {
     await Task.findByIdAndDelete(req.params.id);
