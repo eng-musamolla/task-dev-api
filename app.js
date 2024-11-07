@@ -14,14 +14,23 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/api/tasks", taskRoutes);
+app.use("/", taskRoutes);
 
-// Connect to MongoDB
+// Get the MONGO_URI from environment variables
+const uri = process.env.MONGO_URI;
+
+console.log("Connecting to MongoDB...");
+
+// Connect to MongoDB using Mongoose
 mongoose
-  .connect(process.env.MONGO_URI) // Removed deprecated options
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+  .connect(uri)
+  .then(() => {
+    console.log("MongoDB connected successfully");
+    // Start the server after the database is connected
+    app.listen(PORT, () => {
+      console.log(`Task-dev-API is listening at http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("MongoDB connection error:", err);
+  });
